@@ -22,10 +22,11 @@ import ru.skypro.homework.dto.User;
 public class UsersController {
 
     @Operation(
-            summary = "Смена пароля",
+            summary = "Обновление пароля",
             responses = {
-                @ApiResponse(responseCode = "200", description = "OK"),
-                @ApiResponse(responseCode = "401", description = "Unauthorized")
+                    @ApiResponse(responseCode = "200", description = "OK"),
+                    @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden")
             }
     )
     @PostMapping("/set_password")
@@ -34,7 +35,7 @@ public class UsersController {
     }
 
     @Operation(
-            summary = "Получение профиля",
+            summary = "Получение информации об авторизованном пользователе",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -51,7 +52,7 @@ public class UsersController {
     }
 
     @Operation(
-            summary = "Обновление профиля",
+            summary = "Обновление информации об авторизованном пользователе",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -63,7 +64,7 @@ public class UsersController {
     }
 
     @Operation(
-            summary = "Обновление аватара",
+            summary = "Обновление аватара авторизованного пользователя",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized")
