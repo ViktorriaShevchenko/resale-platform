@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class AdsController {
 
     @Operation(
-            summary = "Все объявления",
+            summary = "Получение всех объявлений",
             responses = @ApiResponse(responseCode = "200", description = "OK")
     )
     @GetMapping
@@ -37,7 +37,7 @@ public class AdsController {
     }
 
     @Operation(
-            summary = "Создать объявление",
+            summary = "Добавление объявления",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Created"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -59,7 +59,7 @@ public class AdsController {
     }
 
     @Operation(
-            summary = "Получить объявление",
+            summary = "Получение информации об объявлении",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "404", description = "Not found")
@@ -76,11 +76,12 @@ public class AdsController {
     }
 
     @Operation(
-            summary = "Удалить объявление",
+            summary = "Удаление объявления",
             responses = {
                     @ApiResponse(responseCode = "204", description = "No Content"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized"),
-                    @ApiResponse(responseCode = "403", description = "Forbidden")
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
     @DeleteMapping("/{id}")
@@ -89,11 +90,12 @@ public class AdsController {
     }
 
     @Operation(
-            summary = "Обновить объявление",
+            summary = "Обновление информации об объявлении",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized"),
-                    @ApiResponse(responseCode = "403", description = "Forbidden")
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
     @PatchMapping("/{id}")
@@ -110,7 +112,7 @@ public class AdsController {
     }
 
     @Operation(
-            summary = "Мои объявления",
+            summary = "Получение объявлений авторизованного пользователя",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -125,11 +127,12 @@ public class AdsController {
     }
 
     @Operation(
-            summary = "Обновить картинку",
+            summary = "Обновление картинки объявления",
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK"),
                     @ApiResponse(responseCode = "401", description = "Unauthorized"),
-                    @ApiResponse(responseCode = "403", description = "Forbidden")
+                    @ApiResponse(responseCode = "403", description = "Forbidden"),
+                    @ApiResponse(responseCode = "404", description = "Not found")
             }
     )
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
