@@ -4,6 +4,7 @@ import lombok.Data;
 import ru.skypro.homework.dto.Role;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
