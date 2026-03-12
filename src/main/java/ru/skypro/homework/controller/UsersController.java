@@ -7,12 +7,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.NewPassword;
-import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.dto.UpdateUser;
 import ru.skypro.homework.dto.User;
+import ru.skypro.homework.service.UserService;
 
 @Slf4j
 @RestController
@@ -20,6 +21,8 @@ import ru.skypro.homework.dto.User;
 @RequiredArgsConstructor
 @Tag(name = "Пользователи")
 public class UsersController {
+
+    private final UserService userService;
 
     @Operation(
             summary = "Обновление пароля",
@@ -30,7 +33,9 @@ public class UsersController {
             }
     )
     @PostMapping("/set_password")
-    public ResponseEntity<Void> setPassword(@RequestBody NewPassword newPassword) {
+    public ResponseEntity<Void> setPassword(@RequestBody NewPassword newPassword,
+                                            Authentication authentication) {
+        userService.updatePassword(authentication.getName(), newPassword);
         return ResponseEntity.ok().build();
     }
 
@@ -42,13 +47,8 @@ public class UsersController {
             }
     )
     @GetMapping("/me")
-    public ResponseEntity<User> getUser() {
-        User user = new User();
-        user.setId(1);
-        user.setEmail("ivan003@mail.com");
-        user.setFirstName("Иван");
-        user.setRole(Role.USER);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<User> getUser(Authentication authentication) {
+        return ResponseEntity.ok(userService.getUser(authentication.getName()));
     }
 
     @Operation(
@@ -59,8 +59,9 @@ public class UsersController {
             }
     )
     @PatchMapping("/me")
-    public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser) {
-        return ResponseEntity.ok(updateUser);
+    public ResponseEntity<UpdateUser> updateUser(@RequestBody UpdateUser updateUser,
+                                                 Authentication authentication) {
+        return ResponseEntity.ok(userService.updateUser(authentication.getName(), updateUser));
     }
 
     @Operation(
@@ -71,7 +72,9 @@ public class UsersController {
             }
     )
     @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> updateUserImage(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<Void> updateUserImage(@RequestParam("image") MultipartFile image,
+                                                Authentication authentication) {
+        userService.updateUserImage(authentication.getName(), image);
         return ResponseEntity.ok().build();
     }
 }
