@@ -8,14 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.Ad;
 import ru.skypro.homework.dto.Ads;
 import ru.skypro.homework.dto.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ExtendedAd;
-
-import java.util.ArrayList;
+import ru.skypro.homework.service.AdService;
 
 @Slf4j
 @RestController
@@ -24,16 +24,15 @@ import java.util.ArrayList;
 @Tag(name = "Объявления")
 public class AdsController {
 
+    private final AdService adService;
+
     @Operation(
             summary = "Получение всех объявлений",
             responses = @ApiResponse(responseCode = "200", description = "OK")
     )
     @GetMapping
     public ResponseEntity<Ads> getAllAds() {
-        Ads ads = new Ads();
-        ads.setCount(0);
-        ads.setResults(new ArrayList<>());
-        return ResponseEntity.ok(ads);
+        return ResponseEntity.ok(adService.getAllAds());
     }
 
     @Operation(
@@ -46,16 +45,15 @@ public class AdsController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Ad> addAd(
             @RequestPart("properties") CreateOrUpdateAd properties,
-            @RequestPart("image") MultipartFile image) {
+            @RequestPart("image") MultipartFile image,
+            Authentication authentication) {
 
-        Ad ad = new Ad();
-        ad.setPk(1);
-        ad.setAuthor(1);
-        ad.setPrice(properties.getPrice());
-        ad.setTitle(properties.getTitle());
-        ad.setImage("/ads/1/image");
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ad);
+        Ad createdAd = adService.createAd(authentication.getName(), properties, image);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAd);
     }
 
     @Operation(
@@ -67,12 +65,7 @@ public class AdsController {
     )
     @GetMapping("/{id}")
     public ResponseEntity<ExtendedAd> getAds(@PathVariable Integer id) {
-        ExtendedAd ad = new ExtendedAd();
-        ad.setPk(id);
-        ad.setTitle("Тест");
-        ad.setPrice(1000);
-        ad.setAuthorFirstName("Иван");
-        return ResponseEntity.ok(ad);
+        return ResponseEntity.ok(adService.getAdById(id));
     }
 
     @Operation(
@@ -85,7 +78,9 @@ public class AdsController {
             }
     )
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> removeAd(@PathVariable Integer id) {
+    public ResponseEntity<Void> removeAd(@PathVariable Integer id,
+                                         Authentication authentication) {
+        adService.deleteAd(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 
@@ -100,15 +95,9 @@ public class AdsController {
     )
     @PatchMapping("/{id}")
     public ResponseEntity<Ad> updateAds(@PathVariable Integer id,
-                                        @RequestBody CreateOrUpdateAd ad) {
-        Ad updatedAd = new Ad();
-        updatedAd.setPk(id);
-        updatedAd.setAuthor(1);
-        updatedAd.setPrice(ad.getPrice());
-        updatedAd.setTitle(ad.getTitle());
-        updatedAd.setImage("/ads/" + id + "/image");
-
-        return ResponseEntity.ok(updatedAd);
+                                        @RequestBody CreateOrUpdateAd ad,
+                                        Authentication authentication) {
+        return ResponseEntity.ok(adService.updateAd(id, authentication.getName(), ad));
     }
 
     @Operation(
@@ -119,11 +108,14 @@ public class AdsController {
             }
     )
     @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe() {
-        Ads ads = new Ads();
-        ads.setCount(0);
-        ads.setResults(new ArrayList<>());
-        return ResponseEntity.ok(ads);
+    public ResponseEntity<Ads> getAdsMe(Authentication authentication) {
+
+        if (authentication == null) {
+            log.warn("Попытка доступа к /ads/me без аутентификации");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(adService.getAdsByUser(authentication.getName()));
     }
 
     @Operation(
@@ -137,7 +129,9 @@ public class AdsController {
     )
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<byte[]> updateImage(@PathVariable Integer id,
-                                              @RequestParam("image") MultipartFile image) {
+                                              @RequestParam("image") MultipartFile image,
+                                              Authentication authentication) {
+        adService.updateAdImage(id, authentication.getName(), image);
         return ResponseEntity.ok(new byte[0]);
     }
 }

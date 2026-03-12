@@ -16,6 +16,12 @@ public interface UserMapper {
 
     UserEntity toUserEntity(User dto);
 
+    @Mapping(target = "email", source = "username")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "image", ignore = true)
+    @Mapping(target = "ads", ignore = true)
+    @Mapping(target = "comments", ignore = true)
+
     UserEntity toUserEntity(Register registerDto);
 
     @Mapping(target = "id", ignore = true)
