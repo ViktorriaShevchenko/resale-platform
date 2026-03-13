@@ -1,25 +1,16 @@
-package ru.skypro.homework;
+package ru.skypro.homework.mapper;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import ru.skypro.homework.dto.Ad;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.UserEntity;
-import ru.skypro.homework.mapper.AdMapper;
-import ru.skypro.homework.mapper.UserMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@SpringBootTest
 public class AdMapperTest {
 
-    @Autowired
-    private AdMapper adMapper;
-
-    @Autowired
-    private UserMapper userMapper;
+    private AdMapper adMapper = new AdMapperImpl();
 
     @Test
     void testAdToDtoMapping() {
