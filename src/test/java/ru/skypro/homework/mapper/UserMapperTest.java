@@ -2,22 +2,15 @@ package ru.skypro.homework.mapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.dto.User;
 import ru.skypro.homework.entity.UserEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
 public class UserMapperTest {
 
-    @Autowired
-    private UserMapper userMapper;
+    private UserMapper userMapper = new UserMapperImpl();
 
     private UserEntity userEntity;
     private User userDto;
@@ -69,5 +62,27 @@ public class UserMapperTest {
         assertEquals(userDto.getPhone(), result.getPhone());
         assertEquals(userDto.getRole(), result.getRole());
         assertEquals(userDto.getImage(), result.getImage());
+    }
+
+    @Test
+    void toUserEntityFromRegister_ShouldMapCorrectly() {
+        ru.skypro.homework.dto.Register register = new ru.skypro.homework.dto.Register();
+        register.setUsername("new@test.com");
+        register.setFirstName("Новый");
+        register.setLastName("Пользователь");
+        register.setPhone("+7(999)111-22-33");
+        register.setRole(Role.USER);
+
+        UserEntity result = userMapper.toUserEntity(register);
+
+        assertNotNull(result);
+        assertEquals("new@test.com", result.getEmail());
+        assertEquals("Новый", result.getFirstName());
+        assertEquals("Пользователь", result.getLastName());
+        assertEquals("+7(999)111-22-33", result.getPhone());
+        assertEquals(Role.USER, result.getRole());
+        assertNull(result.getId());
+        assertNull(result.getImage());
+        assertNull(result.getPassword());
     }
 }

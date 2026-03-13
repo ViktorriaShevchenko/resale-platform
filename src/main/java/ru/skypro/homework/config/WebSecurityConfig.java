@@ -2,22 +2,17 @@ package ru.skypro.homework.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import ru.skypro.homework.filter.BasicAuthCorsFilter;
-
-import javax.sql.DataSource;
+import ru.skypro.homework.service.CustomUserDetailsManager;
+import ru.skypro.homework.service.CustomUserDetailsService;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -36,28 +31,13 @@ public class WebSecurityConfig {
             "/register"
     };
 
-    private final DataSource dataSource;
+    private final CustomUserDetailsService userDetailsService;
+    private final CustomUserDetailsManager userDetailsManager;
 
-    public WebSecurityConfig(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    @Bean
-    @Profile("test")
-    public UserDetailsManager inMemoryUserDetailsManager() {
-        UserDetails user = User.builder()
-                .username("user@test.com")
-                .password(passwordEncoder().encode("password"))
-                .roles("USER")
-                .build();
-
-        UserDetails admin = User.builder()
-                .username("admin@test.com")
-                .password(passwordEncoder().encode("password"))
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(user, admin);
+    public WebSecurityConfig(CustomUserDetailsService userDetailsService,
+                             CustomUserDetailsManager userDetailsManager) {
+        this.userDetailsService = userDetailsService;
+        this.userDetailsManager = userDetailsManager;
     }
 
     @Bean
@@ -79,6 +59,7 @@ public class WebSecurityConfig {
                 .cors()
                 .and()
                 .httpBasic(withDefaults())
+                .userDetailsService(userDetailsService)
                 .addFilterAfter(new BasicAuthCorsFilter(), BasicAuthenticationFilter.class);
 
         return http.build();

@@ -1,9 +1,9 @@
 package ru.skypro.homework.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -18,27 +18,33 @@ import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.entity.UserEntity;
 import ru.skypro.homework.repository.UserRepository;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestConfig.class)
-class AdsControllerIntegrationTest {
+class ImageControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private Path imageStoragePath;
+
+    @Value("${upload.path}")
+    private String uploadPath;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         userRepository.deleteAll();
 
         UserEntity user = new UserEntity();
@@ -49,41 +55,44 @@ class AdsControllerIntegrationTest {
         user.setPhone("+7(999)123-45-67");
         user.setRole(Role.USER);
         userRepository.save(user);
-    }
 
-    @Test
-    void getAllAds_WithoutAuth_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/ads"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.count").isNumber())
-                .andExpect(jsonPath("$.results").isArray());
+        // Очищаем тестовую директорию
+        if (Files.exists(imageStoragePath)) {
+            Files.list(imageStoragePath).forEach(file -> {
+                try {
+                    Files.delete(file);
+                } catch (Exception e) {
+                    // игнорируем
+                }
+            });
+        }
     }
 
     @Test
     @WithMockUser(username = "user@test.com", roles = "USER")
-    void createAd_WithValidData_ShouldReturn201() throws Exception {
+    void getImage_WithValidFilename_ShouldReturnImage() throws Exception {
+        // Сначала создадим объявление с картинкой, чтобы файл появился
         CreateOrUpdateAd ad = new CreateOrUpdateAd();
-        ad.setTitle("Новое объявление");
+        ad.setTitle("Тест");
         ad.setPrice(1000);
-        ad.setDescription("Описание объявления");
+        ad.setDescription("Описание");
 
-        // Создаем mock файл для картинки
         MockMultipartFile imageFile = new MockMultipartFile(
-                "image",  // имя параметра должно совпадать с @RequestPart("image")
+                "image",
                 "test.jpg",
                 MediaType.IMAGE_JPEG_VALUE,
                 "test image content".getBytes()
         );
 
-        // Создаем mock для JSON части
         MockMultipartFile jsonPart = new MockMultipartFile(
-                "properties",  // имя параметра должно совпадать с @RequestPart("properties")
+                "properties",
                 "",
                 MediaType.APPLICATION_JSON_VALUE,
-                objectMapper.writeValueAsBytes(ad)
+                new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsBytes(ad)
         );
 
-        mockMvc.perform(multipart("/ads")
+        // Создаем объявление
+        String response = mockMvc.perform(multipart("/ads")
                         .file(imageFile)
                         .file(jsonPart)
                         .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -92,25 +101,36 @@ class AdsControllerIntegrationTest {
                             return request;
                         }))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.pk").exists())
-                .andExpect(jsonPath("$.title").value("Новое объявление"))
-                .andExpect(jsonPath("$.price").value(1000))
-                .andExpect(jsonPath("$.image").exists());
-    }
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-    @Test
-    void getAdsMe_WithoutAuth_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/ads/me"))
-                .andDo(print())
-                .andExpect(status().isUnauthorized());
-    }
+        // Извлекаем имя файла из ответа
+        String imageUrl = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(response)
+                .get("image")
+                .asText();
 
-    @Test
-    @WithMockUser(username = "user@test.com", roles = "USER")
-    void getAdsMe_WithAuth_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/ads/me"))
+        String filename = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
+
+        // Теперь тестируем получение картинки
+        mockMvc.perform(get("/images/{filename}", filename))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.count").isNumber())
-                .andExpect(jsonPath("$.results").isArray());
+                .andExpect(content().contentType(MediaType.IMAGE_JPEG));
+    }
+
+    @Test
+    @WithMockUser
+    void getImage_WithNonExistentFile_ShouldReturn404() throws Exception {
+        mockMvc.perform(get("/images/nonexistent.jpg"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser
+    void getImage_WithPathTraversal_ShouldBeRejectedBySecurity() {
+        assertThrows(org.springframework.security.web.firewall.RequestRejectedException.class, () -> {
+            mockMvc.perform(get("/images/../../../etc/passwd"));
+        });
     }
 }

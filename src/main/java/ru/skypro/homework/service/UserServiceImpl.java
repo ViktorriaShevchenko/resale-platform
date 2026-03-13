@@ -3,9 +3,7 @@ package ru.skypro.homework.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,7 +23,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final UserDetailsManager userDetailsManager;
+    private final ImageService imageService; // НОВОЕ
 
     @Override
     public User getUser(String email) {
@@ -59,18 +57,14 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-        // Проверяем старый пароль
         if (!passwordEncoder.matches(newPassword.getCurrentPassword(), userEntity.getPassword())) {
             throw new AccessDeniedException("Неверный текущий пароль");
         }
 
-        // Шифруем новый пароль и сохраняем
         userEntity.setPassword(passwordEncoder.encode(newPassword.getNewPassword()));
         userRepository.save(userEntity);
 
-        // Обновляем пользователя в UserDetailsManager
-        UserDetails userDetails = userDetailsManager.loadUserByUsername(email);
-        userDetailsManager.updateUser(userDetails);
+        log.info("Пароль успешно обновлен для пользователя: {}", email);
     }
 
     @Override
@@ -78,16 +72,12 @@ public class UserServiceImpl implements UserService {
     public void updateUserImage(String email, MultipartFile image) {
         log.info("Обновление аватара для пользователя с email: {}", email);
 
-        try {
-            UserEntity userEntity = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        UserEntity userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
-            userEntity.setImage("/users/" + userEntity.getId() + "/image");
-            userRepository.save(userEntity);
-
-        } catch (Exception e) {
-            log.error("Ошибка при сохранении аватара", e);
-            throw new RuntimeException("Ошибка при сохранении аватара", e);
-        }
+        // Обновляем изображение (старое удалится автоматически)
+        String newImagePath = imageService.updateImage(userEntity.getImage(), image, "user", userEntity.getId());
+        userEntity.setImage(newImagePath);
+        userRepository.save(userEntity);
     }
 }

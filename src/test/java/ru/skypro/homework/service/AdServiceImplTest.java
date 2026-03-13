@@ -6,10 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.Ad;
 import ru.skypro.homework.dto.CreateOrUpdateAd;
-import ru.skypro.homework.dto.ExtendedAd;
 import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.entity.AdEntity;
 import ru.skypro.homework.entity.UserEntity;
@@ -22,7 +23,7 @@ import ru.skypro.homework.repository.UserRepository;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +37,9 @@ class AdServiceImplTest {
 
     @Mock
     private AdMapper adMapper;
+
+    @Mock
+    private ImageService imageService;
 
     @InjectMocks
     private AdServiceImpl adService;
@@ -55,6 +59,8 @@ class AdServiceImplTest {
         adEntity.setPk(100);
         adEntity.setTitle("Тестовое объявление");
         adEntity.setPrice(1000);
+        adEntity.setDescription("Старое описание");
+        adEntity.setImage("/ads/old_image.jpg");
         adEntity.setAuthor(author);
 
         createOrUpdateAd = new CreateOrUpdateAd();
@@ -90,8 +96,6 @@ class AdServiceImplTest {
         verify(adMapper).updateAdEntityFromDto(eq(createOrUpdateAd), any(AdEntity.class));
         verify(adRepository).save(any(AdEntity.class));
         verify(adMapper).toAdDto(any(AdEntity.class));
-
-        // Проверяем, что userRepository НЕ вызывался
         verify(userRepository, never()).findByEmail(anyString());
     }
 
@@ -167,5 +171,134 @@ class AdServiceImplTest {
         // Act & Assert
         assertThrows(UserNotFoundException.class,
                 () -> adService.updateAd(100, "unknown@test.com", createOrUpdateAd));
+    }
+
+    // ИСПРАВЛЕННЫЙ ТЕСТ: создание объявления с картинкой
+    @Test
+    void createAd_WithImage_ShouldSaveImage() {
+        // Arrange
+        String email = "author@test.com";
+        MultipartFile image = new MockMultipartFile(
+                "image",
+                "test.jpg",
+                "image/jpeg",
+                "test image content".getBytes()
+        );
+
+        AdEntity newAdEntity = new AdEntity();  // Создаем новую сущность, не используем adEntity из setUp
+        newAdEntity.setAuthor(author);
+
+        AdEntity savedAd = new AdEntity();
+        savedAd.setPk(100);
+        savedAd.setAuthor(author);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(author));
+        when(adMapper.toAdEntity(createOrUpdateAd)).thenReturn(newAdEntity);  // ВАЖНО: мокаем создание сущности
+        when(adRepository.save(any(AdEntity.class))).thenReturn(savedAd);
+        when(imageService.saveImage(any(), eq("ad"), eq(100))).thenReturn("/images/ad_100_test.jpg");
+
+        Ad expectedAdDto = new Ad();
+        expectedAdDto.setPk(100);
+        expectedAdDto.setTitle("Новое название");
+        when(adMapper.toAdDto(any(AdEntity.class))).thenReturn(expectedAdDto);
+
+        // Act
+        Ad result = adService.createAd(email, createOrUpdateAd, image);
+
+        // Assert
+        assertNotNull(result);
+        verify(adMapper).toAdEntity(createOrUpdateAd);
+        verify(adRepository, times(2)).save(any(AdEntity.class));
+        verify(imageService).saveImage(eq(image), eq("ad"), eq(100));
+        verify(adMapper).toAdDto(any(AdEntity.class));
+    }
+
+    // ИСПРАВЛЕННЫЙ ТЕСТ: создание объявления без картинки
+    @Test
+    void createAd_WithoutImage_ShouldNotCallImageService() {
+        // Arrange
+        String email = "author@test.com";
+
+        AdEntity newAdEntity = new AdEntity();  // Создаем новую сущность
+        newAdEntity.setAuthor(author);
+
+        AdEntity savedAd = new AdEntity();
+        savedAd.setPk(100);
+        savedAd.setAuthor(author);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(author));
+        when(adMapper.toAdEntity(createOrUpdateAd)).thenReturn(newAdEntity);  // ВАЖНО: мокаем создание сущности
+        when(adRepository.save(any(AdEntity.class))).thenReturn(savedAd);
+
+        Ad expectedAdDto = new Ad();
+        expectedAdDto.setPk(100);
+        when(adMapper.toAdDto(any(AdEntity.class))).thenReturn(expectedAdDto);
+
+        // Act
+        Ad result = adService.createAd(email, createOrUpdateAd, null);
+
+        // Assert
+        assertNotNull(result);
+        verify(adMapper).toAdEntity(createOrUpdateAd);
+        verify(adRepository, times(1)).save(any(AdEntity.class));
+        verify(imageService, never()).saveImage(any(), any(), any());
+    }
+
+    @Test
+    void deleteAd_WithImage_ShouldDeleteImage() {
+        // Arrange
+        String email = "author@test.com";
+
+        when(adRepository.findById(100)).thenReturn(Optional.of(adEntity));
+
+        // Act
+        adService.deleteAd(100, email);
+
+        // Assert
+        verify(adRepository).findById(100);
+        verify(imageService).deleteImage("/ads/old_image.jpg");
+        verify(adRepository).delete(adEntity);
+    }
+
+    // ИСПРАВЛЕННЫЙ ТЕСТ: удаление объявления без картинки
+    @Test
+    void deleteAd_WithoutImage_ShouldNotCallImageService() {
+        // Arrange
+        String email = "author@test.com";
+        adEntity.setImage(null);
+
+        when(adRepository.findById(100)).thenReturn(Optional.of(adEntity));
+
+        // Act
+        adService.deleteAd(100, email);
+
+        // Assert
+        verify(imageService, never()).deleteImage(any());
+        verify(adRepository).delete(adEntity);
+    }
+
+    @Test
+    void updateAdImage_ShouldUpdateImage() {
+        // Arrange
+        String email = "author@test.com";
+        MultipartFile newImage = new MockMultipartFile(
+                "image",
+                "new.jpg",
+                "image/jpeg",
+                "new image content".getBytes()
+        );
+
+        when(adRepository.findById(100)).thenReturn(Optional.of(adEntity));
+        when(imageService.updateImage(adEntity.getImage(), newImage, "ad", 100))
+                .thenReturn("/images/ad_100_new.jpg");
+
+        // Act
+        adService.updateAdImage(100, email, newImage);
+
+        // Assert
+        verify(adRepository).findById(100);
+        verify(imageService).updateImage("/ads/old_image.jpg", newImage, "ad", 100);
+        verify(adRepository).save(adEntity);
+        assertEquals("/images/ad_100_new.jpg", adEntity.getImage());
     }
 }

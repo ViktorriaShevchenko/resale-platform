@@ -2,6 +2,8 @@ package ru.skypro.homework.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,21 +17,19 @@ import ru.skypro.homework.repository.UserRepository;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private final CustomUserDetailsService userDetailsService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
     @Override
     public boolean login(String userName, String password) {
-        log.info("Попытка входа пользователя с email: {}", userName);
-
-        UserEntity user = userRepository.findByEmail(userName).orElse(null);
-        if (user == null) {
-            log.warn("Пользователь с email {} не найден", userName);
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+            return passwordEncoder.matches(password, userDetails.getPassword());
+        } catch (UsernameNotFoundException e) {
             return false;
         }
-
-        return passwordEncoder.matches(password, user.getPassword());
     }
 
     @Override

@@ -29,6 +29,7 @@ public class AdServiceImpl implements AdService {
     private final AdRepository adRepository;
     private final UserRepository userRepository;
     private final AdMapper adMapper;
+    private final ImageService imageService;
 
     @Override
     public Ads getAllAds() {
@@ -82,9 +83,15 @@ public class AdServiceImpl implements AdService {
         AdEntity adEntity = adMapper.toAdEntity(createOrUpdateAd);
         adEntity.setAuthor(author);
 
-        adEntity.setImage("/ads/" + adEntity.getPk() + "/image");
-
+        // Сохраняем сначала без изображения, чтобы получить id
         AdEntity savedAd = adRepository.save(adEntity);
+
+        // Теперь сохраняем изображение с правильным id
+        if (image != null && !image.isEmpty()) {
+            String imagePath = imageService.saveImage(image, "ad", savedAd.getPk());
+            savedAd.setImage(imagePath);
+            savedAd = adRepository.save(savedAd);
+        }
 
         return adMapper.toAdDto(savedAd);
     }
@@ -117,6 +124,11 @@ public class AdServiceImpl implements AdService {
         // Проверяем права на удаление
         checkAdPermissions(adEntity, email);
 
+        // Удаляем изображение, если оно существует
+        if (adEntity.getImage() != null) {
+            imageService.deleteImage(adEntity.getImage());
+        }
+
         adRepository.delete(adEntity);
     }
 
@@ -131,14 +143,14 @@ public class AdServiceImpl implements AdService {
         // Проверяем права на редактирование
         checkAdPermissions(adEntity, email);
 
-        adEntity.setImage("/ads/" + id + "/image");
+        // Обновляем изображение (старое удалится автоматически)
+        String newImagePath = imageService.updateImage(adEntity.getImage(), image, "ad", id);
+        adEntity.setImage(newImagePath);
         adRepository.save(adEntity);
     }
 
     private void checkAdPermissions(AdEntity adEntity, String email) {
-
         if (!adEntity.getAuthor().getEmail().equals(email)) {
-            // Проверяем, может быть это админ?
             UserEntity user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 

@@ -75,6 +75,12 @@ public class CommentServiceImpl implements CommentService {
         CommentEntity commentEntity = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("Комментарий не найден"));
 
+        // Проверяем, что комментарий действительно относится к указанному объявлению
+        if (!commentEntity.getAd().getPk().equals(adId)) {
+            log.error("Комментарий с id {} не относится к объявлению с id {}", commentId, adId);
+            throw new IllegalArgumentException("Комментарий не относится к указанному объявлению");
+        }
+
         // Проверяем права на удаление
         checkCommentPermissions(commentEntity, email);
 
@@ -90,6 +96,12 @@ public class CommentServiceImpl implements CommentService {
 
         CommentEntity commentEntity = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException("Комментарий не найден"));
+
+        // Проверяем, что комментарий действительно относится к указанному объявлению
+        if (!commentEntity.getAd().getPk().equals(adId)) {
+            log.error("Комментарий с id {} не относится к объявлению с id {}", commentId, adId);
+            throw new IllegalArgumentException("Комментарий не относится к указанному объявлению");
+        }
 
         // Проверяем права на редактирование
         checkCommentPermissions(commentEntity, email);
