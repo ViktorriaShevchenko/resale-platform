@@ -68,6 +68,16 @@
       <artifactId>springdoc-openapi-ui</artifactId>
       <version>1.7.0</version>
     </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!-- MapStruct dependencies -->
     <dependency>
       <groupId>org.mapstruct</groupId>
@@ -80,7 +90,6 @@
       <version>${org.mapstruct.version}</version>
       <scope>provided</scope>
     </dependency>
-    <!-- PostgreSQL dependency (убрал дубликат) -->
   </dependencies>
 
   <build>
