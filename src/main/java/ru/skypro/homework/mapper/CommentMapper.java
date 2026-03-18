@@ -10,6 +10,10 @@ import ru.skypro.homework.entity.CommentEntity;
 
 import java.util.List;
 
+/**
+ * Маппер для преобразования между CommentEntity и соответствующими DTO.
+ * Использует MapStruct для генерации реализации во время компиляции.
+ */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {UserMapper.class})
 public interface CommentMapper {
 

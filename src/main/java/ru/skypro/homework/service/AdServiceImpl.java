@@ -20,6 +20,11 @@ import ru.skypro.homework.repository.UserRepository;
 
 import java.util.List;
 
+/**
+ * Реализация сервиса для работы с объявлениями.
+ * Содержит бизнес-логику создания, обновления, удаления и получения объявлений.
+ * Выполняет проверку прав доступа к операциям с объявлениями.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,6 +36,11 @@ public class AdServiceImpl implements AdService {
     private final AdMapper adMapper;
     private final ImageService imageService;
 
+    /**
+     * Получает список всех объявлений.
+     *
+     * @return объект Ads, содержащий количество объявлений и их список
+     */
     @Override
     public Ads getAllAds() {
         log.info("Получение всех объявлений");
@@ -45,6 +55,13 @@ public class AdServiceImpl implements AdService {
         return ads;
     }
 
+    /**
+     * Получает все объявления конкретного пользователя.
+     *
+     * @param email email пользователя, чьи объявления нужно получить
+     * @return объект Ads с объявлениями пользователя
+     * @throws UserNotFoundException если пользователь с таким email не найден
+     */
     @Override
     public Ads getAdsByUser(String email) {
         log.info("Получение объявлений пользователя с email: {}", email);
@@ -62,6 +79,13 @@ public class AdServiceImpl implements AdService {
         return ads;
     }
 
+    /**
+     * Получает детальную информацию об объявлении по его ID.
+     *
+     * @param id идентификатор объявления
+     * @return расширенная информация об объявлении
+     * @throws AdNotFoundException если объявление с таким ID не найдено
+     */
     @Override
     public ExtendedAd getAdById(Integer id) {
         log.info("Получение объявления с id: {}", id);
@@ -72,6 +96,17 @@ public class AdServiceImpl implements AdService {
         return adMapper.toExtendedAdDto(entity);
     }
 
+    /**
+     * Создает новое объявление.
+     * Сначала сохраняет объявление без картинки, затем добавляет картинку.
+     *
+     * @param email email автора объявления
+     * @param createOrUpdateAd DTO с данными объявления (название, цена, описание)
+     * @param image файл изображения для объявления
+     * @return созданное объявление в формате DTO
+     * @throws UserNotFoundException если автор не найден
+     * @throws IllegalArgumentException если файл изображения некорректный
+     */
     @Override
     @Transactional
     public Ad createAd(String email, CreateOrUpdateAd createOrUpdateAd, MultipartFile image) {
@@ -96,6 +131,17 @@ public class AdServiceImpl implements AdService {
         return adMapper.toAdDto(savedAd);
     }
 
+    /**
+     * Обновляет существующее объявление.
+     * Проверяет, имеет ли пользователь право на редактирование.
+     *
+     * @param id идентификатор объявления
+     * @param email email пользователя, пытающегося обновить объявление
+     * @param createOrUpdateAd новые данные объявления
+     * @return обновленное объявление
+     * @throws AdNotFoundException если объявление не найдено
+     * @throws AccessDeniedException если пользователь не автор и не админ
+     */
     @Override
     @Transactional
     public Ad updateAd(Integer id, String email, CreateOrUpdateAd createOrUpdateAd) {
@@ -113,6 +159,15 @@ public class AdServiceImpl implements AdService {
         return adMapper.toAdDto(updatedAd);
     }
 
+    /**
+     * Удаляет объявление.
+     * Проверяет права доступа и удаляет связанное изображение.
+     *
+     * @param id идентификатор объявления
+     * @param email email пользователя, пытающегося удалить объявление
+     * @throws AdNotFoundException если объявление не найдено
+     * @throws AccessDeniedException если пользователь не автор и не админ
+     */
     @Override
     @Transactional
     public void deleteAd(Integer id, String email) {
@@ -132,6 +187,16 @@ public class AdServiceImpl implements AdService {
         adRepository.delete(adEntity);
     }
 
+    /**
+     * Обновляет изображение объявления.
+     * Старое изображение удаляется, новое сохраняется.
+     *
+     * @param id идентификатор объявления
+     * @param email email пользователя, пытающегося обновить изображение
+     * @param image новый файл изображения
+     * @throws AdNotFoundException если объявление не найдено
+     * @throws AccessDeniedException если пользователь не автор и не админ
+     */
     @Override
     @Transactional
     public void updateAdImage(Integer id, String email, MultipartFile image) {
@@ -149,6 +214,17 @@ public class AdServiceImpl implements AdService {
         adRepository.save(adEntity);
     }
 
+    /**
+     * Проверяет, имеет ли пользователь права на редактирование/удаление объявления.
+     * Права есть если:
+     * - пользователь является автором объявления
+     * - пользователь является администратором
+     *
+     * @param adEntity проверяемое объявление
+     * @param email email пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     * @throws AccessDeniedException если у пользователя нет прав
+     */
     private void checkAdPermissions(AdEntity adEntity, String email) {
         if (!adEntity.getAuthor().getEmail().equals(email)) {
             UserEntity user = userRepository.findByEmail(email)

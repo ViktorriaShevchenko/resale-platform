@@ -4,6 +4,10 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+/**
+ * Сущность комментария.
+ * Хранит текст комментария, время создания, автора и объявление.
+ */
 @Entity
 @Table(name = "comments")
 @Data

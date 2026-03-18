@@ -3,6 +3,10 @@ package ru.skypro.homework.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для полной информации о пользователе.
+ * Используется при GET запросе к /users/me.
+ */
 @Data
 @Schema(description = "Данные пользователя")
 public class User {

@@ -15,6 +15,11 @@ import ru.skypro.homework.exception.UserNotFoundException;
 import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
 
+/**
+ * Реализация сервиса для работы с пользователями.
+ * Содержит бизнес-логику получения информации о пользователе,
+ * обновления профиля, смены пароля и обновления аватара.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,13 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService; // НОВОЕ
 
+    /**
+     * Получает информацию о пользователе по его email.
+     *
+     * @param email email пользователя
+     * @return объект User с данными пользователя
+     * @throws UserNotFoundException если пользователь с таким email не найден
+     */
     @Override
     public User getUser(String email) {
         log.info("Получение информации о пользователе с email: {}", email);
@@ -35,6 +47,14 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserDto(userEntity);
     }
 
+    /**
+     * Обновляет информацию о пользователе (имя, фамилию, телефон).
+     *
+     * @param email email пользователя, чьи данные обновляются
+     * @param updateUser DTO с новыми данными
+     * @return обновленные данные пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     */
     @Override
     @Transactional
     public UpdateUser updateUser(String email, UpdateUser updateUser) {
@@ -49,6 +69,15 @@ public class UserServiceImpl implements UserService {
         return updateUser;
     }
 
+    /**
+     * Обновляет пароль пользователя.
+     * Проверяет, что старый пароль введен верно, и шифрует новый.
+     *
+     * @param email email пользователя
+     * @param newPassword DTO с текущим и новым паролем
+     * @throws UserNotFoundException если пользователь не найден
+     * @throws AccessDeniedException если текущий пароль неверен
+     */
     @Override
     @Transactional
     public void updatePassword(String email, NewPassword newPassword) {
@@ -67,6 +96,14 @@ public class UserServiceImpl implements UserService {
         log.info("Пароль успешно обновлен для пользователя: {}", email);
     }
 
+    /**
+     * Обновляет аватар пользователя.
+     * Старое изображение удаляется, новое сохраняется.
+     *
+     * @param email email пользователя
+     * @param image новый файл аватара
+     * @throws UserNotFoundException если пользователь не найден
+     */
     @Override
     @Transactional
     public void updateUserImage(String email, MultipartFile image) {

@@ -6,6 +6,10 @@ import ru.skypro.homework.entity.UserEntity;
 
 import java.util.Optional;
 
+/**
+ * Репозиторий для работы с пользователями.
+ * Предоставляет методы для доступа к данным таблицы users.
+ */
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Integer> {
     Optional<UserEntity> findByEmail(String email);

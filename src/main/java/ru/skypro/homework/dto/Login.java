@@ -3,6 +3,10 @@ package ru.skypro.homework.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для данных авторизации.
+ * Используется при POST запросе к /login.
+ */
 @Data
 @Schema(description = "Данные для авторизации")
 public class Login {

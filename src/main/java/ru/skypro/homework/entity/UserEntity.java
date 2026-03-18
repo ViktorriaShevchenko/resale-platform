@@ -6,6 +6,10 @@ import ru.skypro.homework.dto.Role;
 import javax.persistence.*;
 import java.util.List;
 
+/**
+ * Сущность пользователя.
+ * Хранит информацию о пользователе: email, пароль, имя, фамилию, телефон, роль и аватар.
+ */
 @Entity
 @Table(name = "users")
 @Data

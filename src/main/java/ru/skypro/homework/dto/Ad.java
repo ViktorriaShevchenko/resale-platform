@@ -3,6 +3,10 @@ package ru.skypro.homework.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для краткой информации об объявлении.
+ * Используется при отображении списка объявлений.
+ */
 @Data
 @Schema(description = "Краткая информация об объявлении")
 public class Ad {

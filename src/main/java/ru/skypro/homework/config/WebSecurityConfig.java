@@ -16,6 +16,21 @@ import ru.skypro.homework.service.CustomUserDetailsService;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+/**
+ * Конфигурация безопасности приложения.
+ * <p>
+ * Настраивает:
+ * <ul>
+ *   <li>Правила доступа к эндпоинтам</li>
+ *   <li>Basic-аутентификацию</li>
+ *   <li>CORS настройки</li>
+ *   <li>Кастомный UserDetailsService для загрузки пользователей из БД</li>
+ * </ul>
+ * </p>
+ *
+ * @author ViktorriaShevchenko
+ * @version 1.0
+ */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -40,6 +55,13 @@ public class WebSecurityConfig {
         this.userDetailsManager = userDetailsManager;
     }
 
+    /**
+     * Настраивает цепочку фильтров безопасности.
+     *
+     * @param http объект HttpSecurity для настройки
+     * @return настроенная цепочка фильтров
+     * @throws Exception если возникает ошибка конфигурации
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf()
@@ -65,6 +87,11 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+    /**
+     * Создает бин для кодирования паролей.
+     *
+     * @return кодировщик паролей BCrypt
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -3,6 +3,10 @@ package ru.skypro.homework.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для создания/обновления объявления.
+ * Используется при POST и PATCH запросах к /ads.
+ */
 @Data
 @Schema(description = "Создание или обновление объявления")
 public class CreateOrUpdateAd {

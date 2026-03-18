@@ -12,6 +12,15 @@ import ru.skypro.homework.dto.Comments;
 import ru.skypro.homework.dto.CreateOrUpdateComment;
 import ru.skypro.homework.service.CommentService;
 
+/**
+ * Контроллер для управления комментариями к объявлениям.
+ * <p>
+ * Предоставляет REST API для получения, добавления, обновления и удаления комментариев.
+ * </p>
+ *
+ * @author ViktorriaShevchenko
+ * @version 1.0
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Комментарии")
@@ -19,6 +28,15 @@ public class CommentsController {
 
     private final CommentService commentService;
 
+    /**
+     * Получает все комментарии к объявлению.
+     * <p>
+     * Доступно без аутентификации.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @return список комментариев
+     */
     @Operation(
             summary = "Получение комментариев объявления",
             responses = {
@@ -31,6 +49,17 @@ public class CommentsController {
         return ResponseEntity.ok(commentService.getCommentsByAdId(id));
     }
 
+    /**
+     * Добавляет новый комментарий к объявлению.
+     * <p>
+     * Доступно только авторизованным пользователям.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @param comment данные комментария
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return созданный комментарий
+     */
     @Operation(
             summary = "Добавление комментария к объявлению",
             responses = {
@@ -46,6 +75,17 @@ public class CommentsController {
         return ResponseEntity.ok(commentService.addComment(id, authentication.getName(), comment));
     }
 
+    /**
+     * Удаляет комментарий.
+     * <p>
+     * Доступно только автору комментария или администратору.
+     * </p>
+     *
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор комментария
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return пустой ответ с кодом 200
+     */
     @Operation(
             summary = "Удаление комментария",
             responses = {
@@ -63,6 +103,18 @@ public class CommentsController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Обновляет существующий комментарий.
+     * <p>
+     * Доступно только автору комментария или администратору.
+     * </p>
+     *
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор комментария
+     * @param comment новые данные комментария
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return обновленный комментарий
+     */
     @Operation(
             summary = "Обновление комментария",
             responses = {

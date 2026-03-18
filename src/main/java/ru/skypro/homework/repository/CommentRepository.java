@@ -6,6 +6,10 @@ import ru.skypro.homework.entity.CommentEntity;
 
 import java.util.List;
 
+/**
+ * Репозиторий для работы с комментариями.
+ * Предоставляет методы для доступа к данным таблицы comments.
+ */
 @Repository
 public interface CommentRepository extends JpaRepository<CommentEntity, Integer> {
     List<CommentEntity> findByAdPk(Integer adPk);
