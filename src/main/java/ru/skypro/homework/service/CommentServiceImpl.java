@@ -21,6 +21,11 @@ import ru.skypro.homework.repository.UserRepository;
 
 import java.util.List;
 
+/**
+ * Реализация сервиса для работы с комментариями.
+ * Содержит бизнес-логику создания, обновления, удаления и получения комментариев.
+ * Выполняет проверку прав доступа к операциям с комментариями.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,6 +36,12 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
 
+    /**
+     * Получает все комментарии к указанному объявлению.
+     *
+     * @param adId идентификатор объявления
+     * @return объект Comments с количеством комментариев и их списком
+     */
     @Override
     public Comments getCommentsByAdId(Integer adId) {
         log.info("Получение комментариев для объявления с id: {}", adId);
@@ -45,6 +56,16 @@ public class CommentServiceImpl implements CommentService {
         return comments;
     }
 
+    /**
+     * Добавляет новый комментарий к объявлению.
+     *
+     * @param adId идентификатор объявления
+     * @param email email автора комментария
+     * @param createOrUpdateComment текст комментария
+     * @return созданный комментарий
+     * @throws AdNotFoundException если объявление не найдено
+     * @throws UserNotFoundException если пользователь не найден
+     */
     @Override
     @Transactional
     public Comment addComment(Integer adId, String email, CreateOrUpdateComment createOrUpdateComment) {
@@ -66,6 +87,18 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toCommentDto(savedComment);
     }
 
+    /**
+     * Удаляет комментарий.
+     * Проверяет, что комментарий относится к указанному объявлению,
+     * и что пользователь имеет права на удаление.
+     *
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор комментария
+     * @param email email пользователя, пытающегося удалить комментарий
+     * @throws CommentNotFoundException если комментарий не найден
+     * @throws IllegalArgumentException если комментарий не относится к указанному объявлению
+     * @throws AccessDeniedException если у пользователя нет прав на удаление
+     */
     @Override
     @Transactional
     public void deleteComment(Integer adId, Integer commentId, String email) {
@@ -87,6 +120,20 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.delete(commentEntity);
     }
 
+    /**
+     * Обновляет существующий комментарий.
+     * Проверяет, что комментарий относится к указанному объявлению,
+     * и что пользователь имеет права на редактирование.
+     *
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор комментария
+     * @param email email пользователя, пытающегося обновить комментарий
+     * @param createOrUpdateComment новый текст комментария
+     * @return обновленный комментарий
+     * @throws CommentNotFoundException если комментарий не найден
+     * @throws IllegalArgumentException если комментарий не относится к указанному объявлению
+     * @throws AccessDeniedException если у пользователя нет прав на редактирование
+     */
     @Override
     @Transactional
     public Comment updateComment(Integer adId, Integer commentId, String email,
@@ -112,6 +159,17 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toCommentDto(updatedComment);
     }
 
+    /**
+     * Проверяет, имеет ли пользователь права на редактирование/удаление комментария.
+     * Права есть если:
+     * - пользователь является автором комментария
+     * - пользователь является администратором
+     *
+     * @param commentEntity проверяемый комментарий
+     * @param email email пользователя
+     * @throws UserNotFoundException если пользователь не найден
+     * @throws AccessDeniedException если у пользователя нет прав
+     */
     private void checkCommentPermissions(CommentEntity commentEntity, String email) {
         // Если пользователь не автор и не админ, то выбрасываем исключение
         if (!commentEntity.getAuthor().getEmail().equals(email)) {

@@ -15,7 +15,18 @@ import ru.skypro.homework.dto.UpdateUser;
 import ru.skypro.homework.dto.User;
 import ru.skypro.homework.service.UserService;
 
+/**
+ * Контроллер для управления профилем пользователя.
+ * <p>
+ * Предоставляет REST API для получения и обновления информации о пользователе,
+ * смены пароля и обновления аватара.
+ * </p>
+ *
+ * @author ViktorriaShevchenko
+ * @version 1.0
+ */
 @Slf4j
+@CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -24,6 +35,16 @@ public class UsersController {
 
     private final UserService userService;
 
+    /**
+     * Обновляет пароль текущего пользователя.
+     * <p>
+     * Проверяет старый пароль перед установкой нового.
+     * </p>
+     *
+     * @param newPassword объект с текущим и новым паролем
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return пустой ответ с кодом 200
+     */
     @Operation(
             summary = "Обновление пароля",
             responses = {
@@ -39,6 +60,12 @@ public class UsersController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Получает информацию о текущем авторизованном пользователе.
+     *
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return информация о пользователе
+     */
     @Operation(
             summary = "Получение информации об авторизованном пользователе",
             responses = {
@@ -51,6 +78,13 @@ public class UsersController {
         return ResponseEntity.ok(userService.getUser(authentication.getName()));
     }
 
+    /**
+     * Обновляет информацию о текущем пользователе (имя, фамилию, телефон).
+     *
+     * @param updateUser новые данные пользователя
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return обновленные данные пользователя
+     */
     @Operation(
             summary = "Обновление информации об авторизованном пользователе",
             responses = {
@@ -64,6 +98,13 @@ public class UsersController {
         return ResponseEntity.ok(userService.updateUser(authentication.getName(), updateUser));
     }
 
+    /**
+     * Обновляет аватар текущего пользователя.
+     *
+     * @param image новый файл аватара
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return пустой ответ с кодом 200
+     */
     @Operation(
             summary = "Обновление аватара авторизованного пользователя",
             responses = {

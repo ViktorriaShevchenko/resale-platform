@@ -17,7 +17,20 @@ import ru.skypro.homework.dto.CreateOrUpdateAd;
 import ru.skypro.homework.dto.ExtendedAd;
 import ru.skypro.homework.service.AdService;
 
+/**
+ * Контроллер для управления объявлениями.
+ * <p>
+ * Предоставляет REST API для выполнения операций с объявлениями:
+ * просмотр всех объявлений, создание нового, получение по ID,
+ * обновление, удаление, получение объявлений текущего пользователя,
+ * обновление изображения объявления.
+ * </p>
+ *
+ * @author ViktorriaShevchenko
+ * @version 1.0
+ */
 @Slf4j
+@CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequestMapping("/ads")
 @RequiredArgsConstructor
@@ -26,6 +39,14 @@ public class AdsController {
 
     private final AdService adService;
 
+    /**
+     * Получает список всех объявлений.
+     * <p>
+     * Доступен без аутентификации.
+     * </p>
+     *
+     * @return список всех объявлений с общей информацией
+     */
     @Operation(
             summary = "Получение всех объявлений",
             responses = @ApiResponse(responseCode = "200", description = "OK")
@@ -35,6 +56,17 @@ public class AdsController {
         return ResponseEntity.ok(adService.getAllAds());
     }
 
+    /**
+     * Создает новое объявление.
+     * <p>
+     * Доступно только авторизованным пользователям с ролями USER или ADMIN.
+     * </p>
+     *
+     * @param properties данные объявления (название, цена, описание)
+     * @param image файл изображения для объявления
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return созданное объявление с присвоенным ID
+     */
     @Operation(
             summary = "Добавление объявления",
             responses = {
@@ -56,6 +88,16 @@ public class AdsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAd);
     }
 
+    /**
+     * Получает подробную информацию об объявлении по его ID.
+     * <p>
+     * Доступен без аутентификации.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @return расширенная информация об объявлении
+     * @throws ru.skypro.homework.exception.AdNotFoundException если объявление не найдено
+     */
     @Operation(
             summary = "Получение информации об объявлении",
             responses = {
@@ -68,6 +110,18 @@ public class AdsController {
         return ResponseEntity.ok(adService.getAdById(id));
     }
 
+    /**
+     * Удаляет объявление по его ID.
+     * <p>
+     * Доступно только автору объявления или администратору.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return пустой ответ с кодом 204
+     * @throws ru.skypro.homework.exception.AdNotFoundException если объявление не найдено
+     * @throws org.springframework.security.access.AccessDeniedException если нет прав на удаление
+     */
     @Operation(
             summary = "Удаление объявления",
             responses = {
@@ -84,6 +138,17 @@ public class AdsController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Обновляет информацию об объявлении.
+     * <p>
+     * Доступно только автору объявления или администратору.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @param ad новые данные объявления
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return обновленное объявление
+     */
     @Operation(
             summary = "Обновление информации об объявлении",
             responses = {
@@ -100,6 +165,12 @@ public class AdsController {
         return ResponseEntity.ok(adService.updateAd(id, authentication.getName(), ad));
     }
 
+    /**
+     * Получает все объявления текущего авторизованного пользователя.
+     *
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return список объявлений пользователя
+     */
     @Operation(
             summary = "Получение объявлений авторизованного пользователя",
             responses = {
@@ -118,6 +189,17 @@ public class AdsController {
         return ResponseEntity.ok(adService.getAdsByUser(authentication.getName()));
     }
 
+    /**
+     * Обновляет изображение объявления.
+     * <p>
+     * Доступно только автору объявления или администратору.
+     * </p>
+     *
+     * @param id идентификатор объявления
+     * @param image новый файл изображения
+     * @param authentication объект аутентификации для получения email текущего пользователя
+     * @return пустой ответ с кодом 200
+     */
     @Operation(
             summary = "Обновление картинки объявления",
             responses = {

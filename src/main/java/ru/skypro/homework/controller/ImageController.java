@@ -5,16 +5,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Контроллер для получения изображений.
+ * <p>
+ * Предоставляет эндпоинт для доступа к загруженным изображениям
+ * (аватары пользователей и картинки объявлений).
+ * </p>
+ *
+ * @author ViktorriaShevchenko
+ * @version 1.0
+ */
 @Slf4j
+@CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequestMapping("/images")
 @RequiredArgsConstructor
@@ -22,6 +30,17 @@ public class ImageController {
 
     private final Path imageStoragePath;
 
+    /**
+     * Получает изображение по имени файла.
+     * <p>
+     * Выполняет проверку на path traversal атаки и возвращает изображение
+     * с соответствующим Content-Type.
+     * </p>
+     *
+     * @param filename имя файла изображения
+     * @return массив байтов изображения с кодом 200, или 404 если файл не найден,
+     *         или 403 при попытке path traversal
+     */
     @GetMapping("/{filename:.+}")
     public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
         try {
@@ -53,6 +72,12 @@ public class ImageController {
         }
     }
 
+    /**
+     * Определяет MIME-тип изображения по расширению файла.
+     *
+     * @param filename имя файла
+     * @return MIME-тип (image/png, image/gif, image/bmp, image/jpeg)
+     */
     private String getContentType(String filename) {
         if (filename.toLowerCase().endsWith(".png")) {
             return "image/png";

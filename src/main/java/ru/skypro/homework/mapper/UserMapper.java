@@ -9,6 +9,10 @@ import ru.skypro.homework.dto.UpdateUser;
 import ru.skypro.homework.dto.User;
 import ru.skypro.homework.entity.UserEntity;
 
+/**
+ * Маппер для преобразования между UserEntity и соответствующими DTO.
+ * Использует MapStruct для генерации реализации во время компиляции.
+ */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 

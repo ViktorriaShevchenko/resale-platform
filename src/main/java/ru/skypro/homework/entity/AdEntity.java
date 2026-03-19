@@ -5,6 +5,10 @@ import lombok.Data;
 import javax.persistence.*;
 import java.util.List;
 
+/**
+ * Сущность объявления.
+ * Содержит информацию об объявлении: название, описание, цену, изображение и автора.
+ */
 @Entity
 @Table(name = "ads")
 @Data

@@ -11,6 +11,10 @@ import ru.skypro.homework.entity.AdEntity;
 
 import java.util.List;
 
+/**
+ * Маппер для преобразования между AdEntity и соответствующими DTO.
+ * Использует MapStruct для генерации реализации во время компиляции.
+ */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {UserMapper.class})
 public interface AdMapper {
 

@@ -3,6 +3,10 @@ package ru.skypro.homework.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для регистрации нового пользователя.
+ * Используется при POST запросе к /register.
+ */
 @Data
 @Schema(description = "Данные для регистрации")
 public class Register {

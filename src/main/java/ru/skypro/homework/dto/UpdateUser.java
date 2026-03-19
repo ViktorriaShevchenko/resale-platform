@@ -3,6 +3,10 @@ package ru.skypro.homework.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * DTO для обновления данных пользователя.
+ * Используется при PATCH запросе к /users/me.
+ */
 @Data
 @Schema(description = "Обновление данных пользователя")
 public class UpdateUser {
