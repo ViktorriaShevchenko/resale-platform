@@ -21,6 +21,7 @@ import ru.skypro.homework.service.CommentService;
  * @author ViktorriaShevchenko
  * @version 1.0
  */
+@CrossOrigin(value = "http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Комментарии")

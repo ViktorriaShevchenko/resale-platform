@@ -135,10 +135,8 @@ public class ImageService {
         String originalFilename = file.getOriginalFilename();
         String extension = getFileExtension(originalFilename);
 
-        // Формат: тип_entityId_uuid. расширение
-        return String.format("%s_%d_%s.%s",
+        return String.format("%s_%s.%s",
                 entityType,
-                entityId,
                 UUID.randomUUID().toString().substring(0, 8),
                 extension);
     }
